@@ -8,23 +8,32 @@ from typing import Optional
 
 
 @dataclass
+class AppleExtraArgs:
+    """
+    Extra arguments for calling verification method
+    exclude_old_transactions - Remove old transactions from validation response
+    shared_secret - Short string with secret to use with auto-renewable subscriptions
+    """
+    shared_secret: str
+    exclude_old_transactions: bool = True
+
+
+@dataclass
 class AppleVerifierConfig:
     """
     Required fields for verification of Apple IAP
 
     bundle_id - Bundle ID of mobile application
         e.g. com.company.awesomapp
-    shared_secret - Short string with secret to use with auto-renewable subscriptions
     auto_retry_wrong_env_request - Tells inapppy to retry validation on different env (Prod or Sandbox)
     sandbox - First send to sandbox
-    exclude_old_transactions - Remove old transactions from validation response
+    extra - Additional parameters for verification process, that shouldn't be provided into verifier constructor
     """
 
     bundle_id: str
-    shared_secret: str
+    extra: AppleExtraArgs
     auto_retry_wrong_env_request: bool = True
     sandbox: bool = False
-    exclude_old_transactions: bool = True
 
 
 @dataclass

@@ -21,8 +21,8 @@ class SubscriptionsBasicController:
     Configuration of validators and parsers for providers
     API for basic actions with receipt verification
     """
-    config: Optional[SubscriptionManagerConfig]
-    providers: set
+    config: Optional[SubscriptionManagerConfig] = None
+    providers: Optional[set] = None
     verifiers = None
     parsers = None
 
@@ -39,7 +39,7 @@ class SubscriptionsBasicController:
             raise ConfigurationIsMissing('No provider configurations found')
         cls.providers = providers
         log.info('Configuring validators and parsers for providers: %s', ', '.join(cls.providers))
-        provider_modules = {p: import_module('subinapp.core.providers', p) for p in cls.providers}
+        provider_modules = {p: import_module('subinapp.core.providers.{}'.format(p)) for p in cls.providers}
         # Prepare namedtuple class instances
         ProviderVerifiers = namedtuple('ProviderVerifiers', cls.providers)
         ProviderParsers = namedtuple('ProviderParsers', cls.providers)
@@ -71,4 +71,3 @@ class SubscriptionsBasicController:
         """
         if provider not in cls.parsers:
             raise UndefinedProvider('Provider %s is not configured for class %s', provider, cls.__name__)
-

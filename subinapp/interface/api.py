@@ -3,12 +3,12 @@ Description of API level classes
 """
 
 import dataclasses
+import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
 
 from subinapp.interface.entities import VerifiedSubscriptionInfo, SubscriptionManagerConfig
 from subinapp.interface.exceptions import ConfigurationIsMissing
-from subinapp.interface.utils import parsing_exception
 
 
 class BaseVerifier(ABC):
@@ -42,7 +42,10 @@ class BaseVerifier(ABC):
             raise ConfigurationIsMissing(
                 "No configuration for provider '%s'", self.provider)
         self.provider_config = provider_config
-        self.verifier = self.verifier_class(**dataclasses.asdict(provider_config))
+        config_dict = dataclasses.asdict(provider_config)
+        config_dict.pop('extra', None)
+        logging.warning(config_dict)
+        self.verifier = self.verifier_class(**config_dict)
 
     @abstractmethod
     def verify(self, receipt: str) -> dict:
@@ -74,25 +77,21 @@ class BaseParser(ABC):
         )
 
     @abstractmethod
-    @parsing_exception('expiration date')
     def detect_expiration_date(self, provider_response: dict) -> datetime:
         """Get subscription expiration date"""
         ...
 
     @abstractmethod
-    @parsing_exception('product id')
     def detect_product_id(self, provider_response: dict) -> str:
         """Get subscription product_id"""
         ...
 
     @abstractmethod
-    @parsing_exception('renewable flag')
     def detect_is_renewable(self, provider_response: dict) -> bool:
         """Get renewable status of subscription"""
         ...
 
     @abstractmethod
-    @parsing_exception('purchase token')
     def detect_purchase_token(self, provider_response: dict) -> str:
         """Get purchase token as unique identifier of subscription"""
         ...

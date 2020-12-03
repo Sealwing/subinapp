@@ -10,6 +10,7 @@ import inapppy
 
 from subinapp.interface.api import BaseVerifier, BaseParser
 from subinapp.interface.exceptions import VerificationFailed
+from subinapp.interface.utils import parsing_exception
 
 log = logging.getLogger(__name__)
 
@@ -41,14 +42,18 @@ class Verifier(BaseVerifier):
 class Parser(BaseParser):
     """Google receipt parser"""
 
+    @parsing_exception('Google','expiration date')
     def detect_expiration_date(self, provider_response: dict) -> datetime:
         return datetime.fromtimestamp(int(provider_response['expiryTimeMillis'] / 1000))
 
+    @parsing_exception('Google','product id')
     def detect_product_id(self, provider_response: dict) -> str:
         return provider_response['productId']
 
+    @parsing_exception('Google','renewable flag')
     def detect_is_renewable(self, provider_response: dict) -> bool:
         return bool(provider_response['autoRenewing'])
 
+    @parsing_exception('Google', 'purchase token')
     def detect_purchase_token(self, provider_response: dict) -> str:
         return provider_response['purchaseToken']

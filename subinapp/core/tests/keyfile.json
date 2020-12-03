@@ -1,0 +1,7 @@
+{
+  "type": "service_account",
+  "client_email": "some@email.com",
+  "private_key": "key",
+  "private_key_id": "pkey.id",
+  "client_id": "client.id"
+}
