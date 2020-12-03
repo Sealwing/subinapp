@@ -1,16 +1,48 @@
 """
 Description of API level classes
 """
+
+import dataclasses
 from abc import ABC, abstractmethod
 from datetime import datetime
 
-from subinapp.interface.entities import VerifiedSubscriptionInfo
+from subinapp.interface.entities import VerifiedSubscriptionInfo, SubscriptionManagerConfig
+from subinapp.interface.exceptions import ConfigurationIsMissing
+from subinapp.interface.utils import parsing_exception
 
 
 class BaseVerifier(ABC):
-    """Verifies receipt"""
+    """
+    Verifies receipt
+    Has to be configured before using
+    In child classes set verifier_class and provider
+    Provider should be same as field with configuration for provider
+        in SubscriptionManagerConfig
+    """
 
+    verifier_class = None
     verifier = None
+    # apple, google or like that
+    provider: str = None
+    # configuration for provider
+    provider_config = None
+
+    def __init__(self, config: SubscriptionManagerConfig):
+        """
+        Checks if class is configured right
+        and if config for provider is present
+        then initializes verifier by passing params from configuration
+            with dict unpacking
+        """
+        if not self.verifier_class or not self.provider:
+            raise ConfigurationIsMissing(
+                "Some class parameters wasn't set. Check if verifier_class and provider are set in class Definition")
+        provider_config = getattr(config, self.provider)
+        if not provider_config:
+            raise ConfigurationIsMissing(
+                "No configuration for provider '%s'", self.provider)
+        self.provider_config = provider_config
+        self.verifier = self.verifier_class(**dataclasses.asdict(provider_config))
 
     @abstractmethod
     def verify(self, receipt: str) -> dict:
@@ -42,21 +74,25 @@ class BaseParser(ABC):
         )
 
     @abstractmethod
+    @parsing_exception('expiration date')
     def detect_expiration_date(self, provider_response: dict) -> datetime:
         """Get subscription expiration date"""
         ...
 
     @abstractmethod
+    @parsing_exception('product id')
     def detect_product_id(self, provider_response: dict) -> str:
         """Get subscription product_id"""
         ...
 
     @abstractmethod
+    @parsing_exception('renewable flag')
     def detect_is_renewable(self, provider_response: dict) -> bool:
         """Get renewable status of subscription"""
         ...
 
     @abstractmethod
+    @parsing_exception('purchase token')
     def detect_purchase_token(self, provider_response: dict) -> str:
         """Get purchase token as unique identifier of subscription"""
         ...

@@ -1,31 +1,31 @@
+"""
+Implementation of Verifier and Parser for App Store subscriptions
+"""
+
 import logging
 from datetime import datetime
 
 import inapppy
 
 from subinapp.interface.api import BaseVerifier, BaseParser
-from subinapp.interface.entities import AppleVerifierConfig, VerifiedSubscriptionInfo
-from subinapp.interface.exceptions import VerificationFailed
+from subinapp.interface.entities import VerifiedSubscriptionInfo
+from subinapp.interface.exceptions import VerificationFailed, ParsingFailed
 
 log = logging.getLogger(__name__)
 
 
 class Verifier(BaseVerifier):
-    def __init__(self, config: AppleVerifierConfig):
-        self.verifier = inapppy.AppStoreValidator(
-            config.bundle_id,
-            auto_retry_wrong_env_request=config.auto_retry_wrong_env,
-            sandbox=config.sandbox
-        )
-        self.exclude_old_transactions = config.exclude_old_transactions
-        self.shared_secret = config.shared_secret
+    """Apple verifier based on inapppy.AppStoreValidator"""
+
+    verifier_class = inapppy.AppStoreValidator
+    provider = 'apple'
 
     def verify(self, receipt: str) -> dict:
         try:
             return self.verifier.validate(receipt=receipt,
-                                          shared_secret=self.shared_secret,
-                                          exclude_old_transactions=self.exclude_old_transactions)
-        except inapppy.InAppPyValidationError as e:
+                                          shared_secret=self.provider_config.shared_secret,
+                                          exclude_old_transactions=self.provider_config.exclude_old_transactions)
+        except inapppy.errors.InAppPyValidationError as e:
             response_from_apple = e.raw_response
             log.warning(f'Apple receipt check failed: %s', response_from_apple)
             log.exception(e)
@@ -33,8 +33,10 @@ class Verifier(BaseVerifier):
 
 
 class Parser(BaseParser):
+    """Apple receipt parser"""
 
     def parse(self, provider_response: dict) -> VerifiedSubscriptionInfo:
+        """Retrieve receipt with the most recent date from latest_receipt_info"""
         # Most of main subscription info is in latest_receipt_info list
         latest_receipts_info: list = provider_response['latest_receipt_info']
         # first will be with max expires_date_ms value, so most fresh
