@@ -14,7 +14,7 @@ class AppleExtraArgs:
     exclude_old_transactions - Remove old transactions from validation response
     shared_secret - Short string with secret to use with auto-renewable subscriptions
     """
-    shared_secret: str
+    shared_secret: Optional[str] = None
     exclude_old_transactions: bool = True
 
 
