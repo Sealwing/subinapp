@@ -44,7 +44,6 @@ class BaseVerifier(ABC):
         self.provider_config = provider_config
         config_dict = dataclasses.asdict(provider_config)
         config_dict.pop('extra', None)
-        logging.warning(config_dict)
         self.verifier = self.verifier_class(**config_dict)
 
     @abstractmethod
