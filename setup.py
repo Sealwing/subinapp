@@ -10,5 +10,5 @@ setup(
     author_email='sealinsky@gmail.com',
     license='MIT',
     requires=['inapppy'],
-    packages=['subinapp', 'subinapp.core', 'subinapp.interface']
+    packages=['subinapp', 'subinapp.core', 'subinapp.core.providers', 'subinapp.interface']
 )
